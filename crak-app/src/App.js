@@ -1,35 +1,43 @@
 import React, { Component } from 'react';
-import logo from './logo.svg';
 import './App.css';
 import playerData from './playerData.json'
 
 console.log('pd', playerData)
+
 const styles = {
-  elixerContainer: { display: 'flex', width: 'calc(100% - 12px)', margin: '20px 6px', height: 10, background: 'lightgray' },
-  elixer: { width: `calc(100% / 10`, height: 10, borderRadius: 10 }
+  elixirContainer: { display: 'flex', width: 'calc(100% - 12px)', margin: '20px 6px', height: '3vw', maxHeight: 30, background: 'lightgray' },
+  elixir: { width: `calc((100% / 10) - 2px`, height: '100%', borderRadius: 2, borderLeft: '2px solid gray' },
+  cardContainer: { flex: 1, position: 'relative' },
+  cardsInHand: { display: 'flex', background: `linear-gradient(to bottom, rgba(0,255,0,0.6), rgba(0,0,0,0.6))`, marginBottom: 22 },
+  cardsInQueue: { display: 'flex' },
+  elixirCost: { position: 'absolute', top: 0, left: 0, borderRadius: '50%', background: 'linear-gradient(to bottom, red, black', height: '20%', width: '22%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 600, border: '2px solid black' },
+  unverifiedCard: { opacity: 0.3, backgroundColor: 'white', position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10vw', color: 'black' },
+  playCardButton: { padding: '1%', backgroundColor: 'gray', color: 'white', width: '20%' }
 }
 
 export default class App extends Component {
   state={
     playerTag: '',
-    opponentElixerCount: 0,
-    myElixerCount: 0,
+    opponentElixirCount: 0,
+    myElixirCount: 0,
+    cardsInHand: playerData.currentDeck.slice(0, 4),
+    cardsInQueue: playerData.currentDeck.slice(4),
   }
 
   componentDidMount() {
-    this.elixerInterval = setInterval(() => {
-      if (this.state.opponentElixerCount < 10) {
-        this.setState(({ opponentElixerCount }) => ({ opponentElixerCount: opponentElixerCount + 1 }))
+    this.elixirInterval = setInterval(() => {
+      if (this.state.opponentElixirCount < 10) {
+        this.setState(({ opponentElixirCount }) => ({ opponentElixirCount: opponentElixirCount + 1 }))
       }
 
-      if (this.state.myElixerCount < 10) {
-        this.setState(({ myElixerCount }) => ({ myElixerCount: myElixerCount + 1 }))
+      if (this.state.myElixirCount < 10) {
+        this.setState(({ myElixirCount }) => ({ myElixirCount: myElixirCount + 1 }))
       }
     }, 1000)
   }
 
   componentWillUnmount() {
-    clearInterval(this.elixerInterval)
+    clearInterval(this.elixirInterval)
   }
 
   handleInputChange = e => {
@@ -45,29 +53,48 @@ export default class App extends Component {
   
   handleSubmit = playerTag => console.log(playerTag)
 
-  renderOpponentsElixerBar = () => [...Array(this.state.opponentElixerCount)].map((count, index) => (
+  handleOpponentCardPlay = card => {
+    if (card.elixirCost > this.state.opponentElixirCount) return console.log('Not enough elixir!')
+
+    const newCardsInHand = [...this.state.cardsInHand]
+    const newCardsInQueue = [...this.state.cardsInQueue]
+    const prevCardIndex = newCardsInHand.findIndex(cardInHand => cardInHand.id === card.id)
+    if (prevCardIndex === -1) return console.log('Player deck assumptions wrong!')
+
+    newCardsInQueue.push({ ...card, verified: true })
+    const newCardInHand = newCardsInQueue.splice(0, 1)[0]
+    newCardsInHand.splice(prevCardIndex, 1, newCardInHand)
+
+    this.setState(({ opponentElixirCount }) => ({
+      cardsInHand: newCardsInHand,
+      cardsInQueue: newCardsInQueue,
+      opponentElixirCount: opponentElixirCount - card.elixirCost,
+    }))
+  }
+
+  renderOpponentsElixirBar = () => [...Array(this.state.opponentElixirCount)].map((count, index) => (
     <div
       key={index}
       style={{
-        ...styles.elixer,
-        background: `linear-gradient(to right, rgba(255,0,0,0.6), red)`
+        ...styles.elixir,
+        background: `linear-gradient(to bottom, rgba(255,0,0,0.6), red)`
       }}
     />
   ))
 
-  renderMyElixerBar = () => [...Array(this.state.myElixerCount)].map((count, index) => (
+  renderMyElixirBar = () => [...Array(this.state.myElixirCount)].map((count, index) => (
     <div
       key={index}
       style={{
-        ...styles.elixer,
-        background: `linear-gradient(to right, rgba(0,0,255,0.6), blue)`
+        ...styles.elixir,
+        background: `linear-gradient(to bottom, rgba(0,0,255,0.6), blue)`
       }}
     />
   ))
 
   render() { 
     return (
-      <div className="App" style={{ maxWidth: 800, margin: '0 auto' }}>
+      <div className="App" style={{ maxWidth: 800, margin: '0 auto', padding: 22 }}>
         <h1>Player Data</h1>
         <div style={{ marginBottom: 22 }}>
           <input
@@ -80,45 +107,58 @@ export default class App extends Component {
           <button type="button" onClick={() => this.handleSubmit(this.state.playerTag)}>Find Player</button>
         </div>
 
-        <div id="Card Section">
-          <div style={{ display: 'flex' }}>
-            {playerData.currentDeck.map((card, index) => {
-              if (index <= 3) {
-                return (
-                  <div style={{ flex: 1 }} key={index}>
-                    <img
-                      alt={card.name}
-                      width="100%"
-                      height="100%"
-                      src={card.iconUrls.medium}
-                    />
-                  </div>
-                )
-              }
+        <div id="cardSection">
+          <div id="cardsInHand" style={styles.cardsInHand}>
+            {this.state.cardsInHand.map((card, index) => {
+              const verified = card.verified
+              return (
+                <div style={styles.cardContainer} key={index}>
+                  <img
+                    alt={card.name}
+                    width="100%"
+                    height="100%"
+                    src={card.iconUrls.medium}
+                  />
+                  <div style={styles.elixirCost}>{card.elixirCost}</div>
+                  {!verified && <div style={styles.unverifiedCard}>?</div>}
+                </div>
+              )
             })}
           </div>
-          <div style={{ display: 'flex' }}>
-          {playerData.currentDeck.map((card, index) => {
-              if (index > 3) {
-                return (
-                  <div style={{ flex: 1 }} key={index}>
-                    <img
-                      alt={card.name}
-                      width="100%"
-                      height="100%"
-                      src={card.iconUrls.medium}
-                    />
-                  </div>
-                )
-              }
+          <div id="cardsInQueue" style={styles.cardsInQueue}>
+            {this.state.cardsInQueue.map((card, index) => {
+              const verified = card.verified
+              return (
+                <div style={styles.cardContainer} key={index}>
+                  <img
+                    alt={card.name}
+                    width="100%"
+                    height="100%"
+                    src={card.iconUrls.medium}
+                  />
+                  <div style={styles.elixirCost}>{card.elixirCost}</div>
+                  {!verified && <div style={styles.unverifiedCard}>?</div>}
+                </div>
+              )
             })}
           </div>
         </div>
-        <div style={styles.elixerContainer}>
-          {this.renderOpponentsElixerBar()}
+        <div style={styles.elixirContainer}>
+          {this.renderOpponentsElixirBar()}
         </div>
-        <div style={styles.elixerContainer}>
-          {this.renderMyElixerBar()}
+        <div style={styles.elixirContainer}>
+          {this.renderMyElixirBar()}
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-around' }}>
+          {this.state.cardsInHand.map((cardInHand, index) => (
+            <button
+              key={index}
+              style={styles.playCardButton}
+              onClick={() => this.handleOpponentCardPlay(cardInHand)}
+            >
+              {`Play ${cardInHand.name}`}
+            </button>
+          ))}
         </div>
       </div>
     );

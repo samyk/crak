@@ -1032,7 +1032,8 @@
       "count": 50,
       "iconUrls": {
         "medium": "https://api-assets.clashroyale.com/cards/300/BmpK3bqEAviflqHCdxxnfm-_l3pRPJw3qxHkwS55nCY.png"
-      }
+      },
+      "elixirCost": 3
     },
     {
       "name": "Electro Wizard",
@@ -1042,7 +1043,8 @@
       "count": 1,
       "iconUrls": {
         "medium": "https://api-assets.clashroyale.com/cards/300/RsFaHgB3w6vXsTjXdPr3x8l_GbV9TbOUCvIx07prbrQ.png"
-      }
+      },
+      "elixirCost": 4
     },
     {
       "name": "Goblin Gang",
@@ -1052,7 +1054,8 @@
       "count": 250,
       "iconUrls": {
         "medium": "https://api-assets.clashroyale.com/cards/300/NHflxzVAQT4oAz7eDfdueqpictb5vrWezn1nuqFhE4w.png"
-      }
+      },
+      "elixirCost": 3
     },
     {
       "name": "Barbarian Barrel",
@@ -1062,7 +1065,8 @@
       "count": 9,
       "iconUrls": {
         "medium": "https://api-assets.clashroyale.com/cards/300/Gb0G1yNy0i5cIGUHin8uoFWxqntNtRPhY_jeMXg7HnA.png"
-      }
+      },
+      "elixirCost": 2
     },
     {
       "name": "P.E.K.K.A",
@@ -1072,7 +1076,8 @@
       "count": 4,
       "iconUrls": {
         "medium": "https://api-assets.clashroyale.com/cards/300/MlArURKhn_zWAZY-Xj1qIRKLVKquarG25BXDjUQajNs.png"
-      }
+      },
+      "elixirCost": 7
     },
     {
       "name": "Poison",
@@ -1082,7 +1087,8 @@
       "count": 5,
       "iconUrls": {
         "medium": "https://api-assets.clashroyale.com/cards/300/98HDkG2189yOULcVG9jz2QbJKtfuhH21DIrIjkOjxI8.png"
-      }
+      },
+      "elixirCost": 4
     },
     {
       "name": "Bandit",
@@ -1092,7 +1098,8 @@
       "count": 1,
       "iconUrls": {
         "medium": "https://api-assets.clashroyale.com/cards/300/QWDdXMKJNpv0go-HYaWQWP6p8uIOHjqn-zX7G0p3DyM.png"
-      }
+      },
+      "elixirCost": 3
     },
     {
       "name": "Battle Ram",
@@ -1102,7 +1109,8 @@
       "count": 50,
       "iconUrls": {
         "medium": "https://api-assets.clashroyale.com/cards/300/dyc50V2cplKi4H7pq1B3I36pl_sEH5DQrNHboS_dbbM.png"
-      }
+      },
+      "elixirCost": 4
     }
   ],
   "currentFavouriteCard": {
