@@ -30,6 +30,7 @@ cd usbdriveby
 sudo perl -MCPAN -e 'install Net::DNS'
 # add *YOUR* local Proxy IP address to /etc/hosts, eg "192.168.0.104"
 echo "192.168.0.104 game.clashroyaleapp.com" | sudo tee -a /etc/hosts
+cd ..
 ```
 - Install [xz](https://tukaani.org/xz/) if you don't already have it
 ```sh
@@ -60,6 +61,6 @@ xz -d frida-server-12.2.25-android-x86.xz
 - Validate Frida is communicating properly
   - `frida-ps -H 127.0.0.1`
 - Run TwistedProxy on Mac (which launches Clash Royale with custom key automaticaly)
-  - `python3 TwistedProxy/Main.py -a nadb -v -f -u`
+  - `python3 TwistedProxy/Main.py -a '/Applications/Nox App Player.app/Contents/MacOS/adb' -v -f -u`
 - Run Crak daemon
   - `perl crak/crakd -s`
