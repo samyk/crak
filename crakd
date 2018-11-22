@@ -1,0 +1,204 @@
+#!/usr/bin/perl
+
+# SectorHeartbeat
+# note - 2 added to *troops
+my $server;
+my %tags = map { $_ => 1 } qw/P0JV0JJY8/; # ignore ours
+$server = shift if ($ARGV[0] eq "-s");
+
+use strict;
+use IO::Socket;
+my $UDPHOST = "127.0.0.1";
+my $UDPPORT = 9340;
+
+if ($server)
+{
+  $server = IO::Socket::INET->new(
+    LocalAddr => $UDPHOST,
+    LocalPort => $UDPPORT,
+    Proto => 'udp',
+    #Listen => 1,
+  ) || die $!;
+}
+
+my @types = qw/troop building spell/;
+my %levels = ('Common' => 1, 'Rare' => 3, 'Epic' => 6, 'Legendary' => 9);
+my @shb = qw/serverturns checksum num_cmds command execute_tick null accountid_hi accountid_lo deckid unknown sctype scsubtype null ?optionalflag instanceid level x y/;
+
+my @elixir_troops = qw/3 3 2 5 7 3 5 5 5 8 1 4 3 3 4 4 5 5 4 2 6 4 5 3 6 3 3 4 9 7 1 2 3 6 5 4 4 4 2 3 3 3 4 6 4 5 3 8 4 2 3 3 4 5 5 7 3 4 3 5 6 3 4 5 3 3/;
+splice(@elixir_troops, -2);
+my @elixir_buildings = qw/0 0 3 5/;
+my @elixir_spells = qw/ /;
+my @elixir = (@elixir_troops, @elixir_buildings, @elixir_spells);
+
+my @rarity_troops = qw/Common Common Common Rare Epic Common Epic Epic Common Epic Common Rare Epic Common Rare Epic Epic Rare Rare Common Epic Rare Common Legendary Common Epic Legendary Epic Rare Legendary Common Common Legendary Legendary Epic Legendary Rare Legendary Rare Rare Rare Common Legendary Common Epic Epic Legendary Common Legendary Common Legendary Common Rare Common Epic Legendary Common Rare Common Rare Epic Common Legendary Epic Common Common/;
+splice(@rarity_troops, -2);
+my @rarity_buildings = qw/Common Common Common Rare Common Rare Rare Rare Common Rare Epic Rare Epic Epic Rare Legendary Common Legendary Common Common Common Common Common Common Common Rare Legendary Common/;
+my @rarity_spells = qw//;
+my @rarity = (@rarity_troops, @rarity_buildings, @rarity_spells);
+
+my @troops = qw/Knight Archer Goblins Giant Pekka Minions Balloon Witch Barbarians Golem Skeletons Valkyrie SkeletonArmy Bomber Musketeer BabyDragon Prince Wizard MiniPekka SpearGoblins GiantSkeleton HogRider MinionHorde IceWizard RoyalGiant SkeletonWarriors Princess DarkPrince ThreeMusketeers LavaHound IceSpirits FireSpirits Miner ZapMachine Bowler RageBarbarian BattleRam InfernoDragon IceGolemite MegaMinion BlowdartGoblin GoblinGang ElectroWizard AngryBarbarians Hunter AxeMan Assassin RoyalRecruits DarkWitch Bats Ghost REPLACEWR MiniSparkys Rascals MovingCannon MegaKnight SkeletonBalloon DartBarrell NOTINUSEEG RoyalHogs GoblinGiant NOTINUSECH EliteArcher ElectroDragon NOTINUSEAM REPLACEWB/;
+splice(@troops, -2);
+my @buildings = qw/KingTower PrincessTower Cannon GoblinHut Mortar InfernoTower BombTower BarbarianHut Tesla ElixirCollector Xbow Tombstone GiantSkeletonBomb BalloonBomb FirespiritHut RageBarbarianBottle KingTowerMiddle MagicBomb NOTINUSEB1 SkeletonContainer DummyKingTower DummyKingTower2 PrincessTowerSwapping CaptureTower CaptureTowerTop NOTINUSEMC NOTINUSEHS NOTINUSEBK/;
+my @spells = qw//;
+my @chars = (@troops, @buildings, @spells);
+
+
+my $dat;
+
+my $MAXLEN = 128;
+if ($server)
+{
+  while ($server->recv($dat, $MAXLEN))
+  {
+    my $id = unpack("n", substr($dat, 0, 2, ''));
+    if ($id == 17187 || $id == 26301)
+    {
+      if (length($dat) > 8)
+      {
+        $dat = unpack("H*", $dat);
+        print "data: $id (len=" . length($dat)/2 .") $dat\n";
+        parse($dat);
+      }
+    }
+  }
+}
+else
+{
+  while (<>)
+  {
+    if (/^\w+:\s+(.{1,48})/)
+    {
+      $dat .= $1;
+    }
+    elsif (/^[a-f\d]+$/i)
+    {
+      $dat .= $_;
+    }
+  }
+  $dat =~ s/\s//g;
+  print "Read: $dat\n";
+  parse($dat);
+}
+
+sub parse
+{
+  my $data = shift;
+  my @tshb = @shb;
+  my ($vint, $opt, $loffset, $sign, %d);
+  while (length($data))
+  {
+    my $byte = unpack("B8", pack("H2", substr($data, 0, 2, '')));
+    # more data
+    if (substr($byte, 0, 1, ''))
+    {
+      if (!defined($sign))
+      {
+        $sign = substr($byte, 0, 1, '');
+      }
+      $vint = $byte . $vint;
+    }
+    else
+    {
+      if (!defined($sign))
+      {
+        $sign = substr($byte, 0, 1, '');
+      }
+      $vint = $byte . $vint;
+      my $pid = shift(@tshb);
+      print "$pid: ";
+      $vint = pad($vint);
+
+      if (length($vint) <= 8)
+      {
+        $d{$pid} = ord(pack("B8", $vint));
+      }
+      if (length($vint) > 32)
+      {
+        $d{$pid} = unpack("H*", pack("B*", $vint));
+      }
+      else
+      {
+        $d{$pid} = unpack("N", pack("B*", pad($vint, 32)));
+      }
+
+      if ($pid eq "instanceid")
+      {
+        $loffset = $d{$pid}-1;
+        print uc("$chars[$loffset] ");
+        $opt = "elixir = $elixir[$loffset]\n";
+        $opt .= "type = $rarity[$loffset]\n";
+      }
+      elsif ($pid eq "level")
+      {
+        print $d{$pid} + $levels{$rarity[$loffset]};
+        print " = $rarity[$loffset] $levels{$rarity[$loffset]} + ";
+      }
+      elsif ($pid eq "sctype")
+      {
+        print uc("$types[$d{$pid}-26] ");
+      }
+      elsif ($pid eq "accountid_lo")
+      {
+        $d{'tag'} = tagfromid($d{'accountid_hi'}, $d{'accountid_lo'});
+        $opt = "gamertag = $d{'tag'}\n";
+        if (!$tags{$d{'tag'}}++ && $server)
+        {
+          system("open 'https://royaleapi.com/player/$d{'tag'}'");
+          system("(sleep 1 ; osascript -e 'tell application \"Google Chrome Beta\" to tell active tab of window 1 to execute javascript \"window.scroll(0,1300)\"') &");
+          system("(sleep 2 ; osascript -e 'tell application \"Google Chrome Beta\" to tell active tab of window 1 to execute javascript \"window.scroll(0,1300)\"') &");
+        }
+      }
+      print $d{$pid};
+
+      print "\t\t($vint)";
+      print "\n";
+      $vint = "";
+      $sign = undef;
+      if ($opt)
+      {
+        print $opt;
+        $opt = "";
+      }
+    }
+  }
+  print "\n\n";
+}
+
+sub tagfromid
+{
+  my ($hi, $lo) = @_;
+  my @tagchrs = qw/0 2 8 9 P Y L Q G R J C U V/;
+  my $id = ($lo << 8) | $hi;
+
+  my $res;
+  while ($id)
+  {
+    my $rem = int($id % @tagchrs);
+    $res = $tagchrs[$rem] . $res;
+    $id -= $rem;
+    $id /= @tagchrs;
+  }
+  return $res;
+}
+
+sub pad
+{
+  my ($bin, $maxlen) = @_;
+  $bin =~ s/^0+//;
+  $bin ||= 0;
+  my $len = length($bin);
+  my $pad;
+
+  if (!$maxlen)
+  {
+    $pad = (8 - ($len % 8));
+    $pad = 0 if $pad == 8;
+  }
+  else
+  {
+    $pad = $maxlen - $len;
+  }
+
+  return (("0" x $pad) . $bin);
+}
