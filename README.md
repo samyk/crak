@@ -1,6 +1,8 @@
 # crak
 Crash Royale Attack Kit
 
+![CRAK architecture](assets/crakarch.png)
+
 ### Installation
 
 - Install [Nox](https://www.bignox.com/) Android emulator
