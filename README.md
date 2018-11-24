@@ -59,10 +59,17 @@ xz -d frida-server-12.2.25-android-x86.xz
   - `'/Applications/Nox App Player.app/Contents/MacOS/adb' -e shell /data/local/tmp/frida-server -D`
 - ***this may not be necessary, try without first*** Run reverse SSH tunnel for Frida on Nox to Proxy
   - `'/Applications/Nox App Player.app/Contents/MacOS/adb' -e shell`
+  - Install `SSHDroid` through app store if ssh isn't available on the Android device
   - `ssh -Nnf -R 27042:localhost:27042 remote@192.168.0.104` # adjust 192 IP to Proxy IP
 - Validate Frida is communicating properly
-  - `frida-ps -H 127.0.0.1`
+  - `frida-ps -U` OR `frida-ps -H 127.0.0.1` **(ensure at least one works)**
 - Run TwistedProxy on Mac (which launches Clash Royale with custom key automaticaly)
-  - `python3 TwistedProxy/Main.py -a '/Applications/Nox App Player.app/Contents/MacOS/adb' -v -f -u`
+  - `cd TwistedProxy && python3 Main.py -a '/Applications/Nox App Player.app/Contents/MacOS/adb' -v -f -u`
 - Run Crak daemon
   - `perl crak/crakd -s`
+
+### Inline Application Modifications
+
+See the [configs](configs) directory for direct modifications to CR files for additional features, e.g. viewing live opponent elixir in spectator view.
+
+![Opponent Elixir](assets/crspectate.png)

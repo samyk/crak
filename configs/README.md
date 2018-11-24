@@ -1,5 +1,7 @@
 ## Special configs
 
+![Opponent Elixir](../assets/crspectate.png)
+
 Current features:
 - view elixir of opponent during live spectating
 - incease how much confetti you can spray during spectating
