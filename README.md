@@ -49,6 +49,7 @@ cd ..
 wget https://github.com/frida/frida/releases/download/12.2.25/frida-server-12.2.25-android-x86.xz
 xz -d frida-server-12.2.25-android-x86.xz
 '/Applications/Nox App Player.app/Contents/MacOS/adb' -e push frida-server-12.2.25-android-x86 /data/local/tmp/frida-server
+cd ..
 ```
 
 ### Running the Proxy
