@@ -1,0 +1,58 @@
+#!/usr/bin/perl
+#
+# Generate a Clash Royale / Supercell "lzma" compressed file
+# They use a unique header and require the uncompressed filesize
+# to be defined in the lzma header (which `xz`/`lzma` won't do)
+#
+# -samy kamkar - https://samy.pl
+# 2018/11/23
+
+use strict;
+die "usage: $0 [-p (push via adb)] <csv file (to create .lzma)>\n" unless @ARGV;
+my $MOD_HEADER = 1;
+my $ADB = "nadb -e";
+my $push = 0;
+if ($ARGV[0] eq "-p")
+{
+  shift(@ARGV);
+  $push = 1;
+}
+
+foreach my $file (@ARGV)
+{
+  print "Compressing $file\n";
+  system("elzma -k --lzma -v -z $file");
+  #system("elzma -9 -k --lzma -v -z $file");
+
+  my $lzma = "$file.lzma";
+  open(IN, "<$lzma") || die "Can't read $lzma: $!";
+  my $data = join "", <IN>;
+  close(IN);
+
+  # drop first 5 bytes, CR won't respect this header
+  my $orighdr = substr($data, 0, 5, '');
+
+  # grab first 4 bytes uncompressed file size
+  my $size = substr($data, 0, 4, '');
+
+  # drop next 4 bytes of uncompressed file size
+  substr($data, 0, 4, '');
+
+  # insert our own header
+  #my $header = $MOD_HEADER ? "\x5d\x00\x40\x00\x00" : $orighdr;
+  my $header = $MOD_HEADER ? "\x5d\x00\x00\x04\x00" : $orighdr;
+  $data = $header . $size . $data;
+
+  # write new file
+  my $csv = "$file.csv";
+  open(OUT, ">$csv") || die "Can't write $csv$!";
+  print OUT $data;
+  close(OUT);
+
+  print "Generated $csv\n";
+
+  if ($push)
+  {
+    system("$ADB push client_globals.csv /data/data/com.supercell.clashroyale/update/csv_client/");
+  }
+}
